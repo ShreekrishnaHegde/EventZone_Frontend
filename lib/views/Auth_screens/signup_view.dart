@@ -1,20 +1,24 @@
-import 'package:eventzone_frontend/views/Auth_screens/signup_view.dart';
+import 'package:eventzone_frontend/views/Auth_screens/login_view.dart';
 import 'package:flutter/material.dart';
 
-class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+class SignupView extends StatefulWidget {
+  const SignupView({super.key});
 
   @override
-  State<LoginView> createState() => _LoginViewState();
+  State<SignupView> createState() => _SignupViewState();
 }
 
-class _LoginViewState extends State<LoginView> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  String? error;
-  bool _obscureText = true;
+class _SignupViewState extends State<SignupView> {
 
-  InputDecoration buildInputDecoration(String labelText,IconData icon) {
+  final _emailController=TextEditingController();
+  final _passwordController=TextEditingController();
+  final _confirmPasswordController=TextEditingController();
+  final _fullnameController=TextEditingController();
+  final _roleController=TextEditingController();
+  String? selectedRole;
+  final List<String> roles = ['Attendee', 'Host'];
+
+  InputDecoration buildInputDecoration(String labelText,) {
     return InputDecoration(
       border: UnderlineInputBorder(),
       labelText: labelText,
@@ -26,11 +30,12 @@ class _LoginViewState extends State<LoginView> {
         borderSide: BorderSide(color: Color(0xFF140447), width: 2.0),
         borderRadius: BorderRadius.circular(8.0),
       ),
-      prefixIcon: Icon(icon, color: Colors.grey),
+      // prefixIcon: Icon(icon, color: Colors.grey),
       filled: true,
       fillColor: Colors.grey.shade100,
     );
   }
+
   final ButtonStyle raisedButtonStyle = ElevatedButton.styleFrom(
     foregroundColor: Colors.white,
     backgroundColor: Color(0xFF140447),
@@ -40,46 +45,68 @@ class _LoginViewState extends State<LoginView> {
       borderRadius: BorderRadius.all(Radius.circular(12)),
     ),
   );
-
-  void _login() async{
-
+  Widget buildTextField({
+    required String label,
+    TextEditingController? controller,
+    bool obscure=false,
+  }){
+    return TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      decoration: buildInputDecoration(label),
+    );
+  }
+  Widget buildRoleDropdown(){
+    return SizedBox(
+      width: double.infinity,
+      child: DropdownButtonFormField<String>(
+          decoration: buildInputDecoration("Select Role"),
+          value: selectedRole,
+          isExpanded: true,
+          items: roles.map(
+                  (role){
+                return DropdownMenuItem(
+                  value: role,
+                  child: Text(role),
+                );
+              }
+          ).toList(),
+          onChanged: (value){
+            setState(() {
+              selectedRole=value;
+              _roleController.text=value!;
+            });
+          }
+      ),
+    );
   }
   @override
   Widget build(BuildContext context) {
     final screen_height=MediaQuery.of(context).size.height;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: false,
       body: Center(
         child: SafeArea(
           child: Padding(
             padding: EdgeInsets.all(20),
-            child: Column(
+            child: ListView(
               children: [
-                Image.asset(
-                  "assets/logo.png",
-                  height: screen_height/12,
-                ),
                 RichText(
                   textAlign: TextAlign.center,
                   text: TextSpan(
                     style: const TextStyle(
-                        fontSize: 22,
-                        height: 1.5,
-                        color: Colors.black87,
-                        fontFamily: 'Poppins'
+                      fontSize: 22,
+                      height: 1.5,
+                      color: Colors.black87,
+                      fontFamily: 'Poppins',
                     ),
                     children: [
                       const TextSpan(
-                        text: "Hi, ",
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      const TextSpan(
-                        text: "Welcome Back 👋\n",
+                        text: "Register\n",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const TextSpan(
-                        text: "Login to your account",
+                        text: "Create your new account",
                         style: TextStyle(
                           fontWeight: FontWeight.w400,
                           color: Colors.black54,
@@ -89,34 +116,22 @@ class _LoginViewState extends State<LoginView> {
                     ],
                   ),
                 ),
-                SizedBox(height: screen_height/15,),
-                TextFormField(
-                  controller: _emailController,
-                  decoration:  buildInputDecoration("Enter your email", Icons.email),
-                ),
-                SizedBox(height: 30,),
-                TextFormField(
-                  obscureText: _obscureText,
-                  controller: _passwordController,
-                  decoration: buildInputDecoration("Enter the password", Icons.password).copyWith(
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureText ? Icons.visibility_off : Icons.visibility,
-                        ),
-                        onPressed: (){
-                          setState(() {
-                            _obscureText = !_obscureText;
-                          });
-                        },
-                      )
-                  ),
-                ),
-                SizedBox(height: 30,),
+                SizedBox(height: screen_height/25,),
+                buildTextField(label: "Full Name",controller: _fullnameController),
+                SizedBox(height: screen_height/50,),
+                buildTextField(label: "Email", controller: _emailController),
+                SizedBox(height: screen_height/50,),
+                buildTextField(label: "Password", controller: _passwordController, obscure: true),
+                SizedBox(height: screen_height/50,),
+                buildTextField(label: "Confirm Password", controller: _confirmPasswordController, obscure: true),
+                SizedBox(height: screen_height/50,),
+                buildRoleDropdown(),
+                SizedBox(height: screen_height/50,),
                 ElevatedButton(
                   style: raisedButtonStyle,
-                  onPressed: _login,
+                  onPressed: (){},
                   child: const Text(
-                    "Login",
+                    "Signup",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20
@@ -126,17 +141,17 @@ class _LoginViewState extends State<LoginView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account?"),
+                    const Text("Already have an account?"),
                     TextButton(
                       style: ButtonStyle(
                         splashFactory: NoSplash.splashFactory,
                         overlayColor: WidgetStateProperty.all(Colors.transparent),
                       ),
                       onPressed: (){
-                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignupView()));
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginView()));
                       },
                       child: const Text(
-                        "SignUp",
+                        "Login",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF140447),
