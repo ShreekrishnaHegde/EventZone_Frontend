@@ -123,6 +123,7 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   ),
                 ),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -144,6 +145,21 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  icon: Image.asset(
+                    'assets/google.png', // Make sure you have this image in your assets folder
+                    height: 24,
+                    width: 24,
+                  ),
+                  label: const Text('Continue with Google'),
+                  // onPressed: _signInWithGoogle,
+                  onPressed: (){},
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                    textStyle: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ],
             ),
