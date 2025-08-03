@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:eventzone_frontend/service/auth_service/auth_service.dart';
 import 'package:eventzone_frontend/views/Auth_screens/login_view.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../attendee/attendee_home_view.dart';
 import '../host/host_home_view.dart';
 enum UserRole { attendee, host }
@@ -13,7 +17,8 @@ class SignupView extends StatefulWidget {
 }
 
 class _SignupViewState extends State<SignupView> {
-
+  StreamSubscription? _sub;
+  static const platform = MethodChannel('com.example.eventzone_frontend.app/deeplink');
   final _emailController=TextEditingController();
   final _passwordController=TextEditingController();
   final _confirmPasswordController=TextEditingController();
@@ -22,6 +27,7 @@ class _SignupViewState extends State<SignupView> {
   String? selectedRole;
   final List<String> roles = ['Attendee', 'Host'];
   final AuthService _authService=AuthService();
+  final _baseUrl = dotenv.env['BASE_URL']!;
   // UserRole? selectedRole;
   String? error;
 
@@ -98,16 +104,16 @@ class _SignupViewState extends State<SignupView> {
 
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
-      final fullname=_fullnameController.text;
+
 
       debugPrint("Attempting signup for role: $selectedRole");
 
       if (selectedRole == UserRole.attendee) {
-        final user = await _authService.signupAttendee(email, password,fullname);
+        final user = await _authService.signupAttendee(email, password);
         debugPrint("Attendee signup success: ${user?.email}");
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AttendeeHomeView()));
       } else {
-        final user = await _authService.signupHost(email, password,fullname);
+        final user = await _authService.signupHost(email, password);
         debugPrint("Host signup success: ${user?.email}");
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HostHomeView()));
       }
@@ -117,6 +123,61 @@ class _SignupViewState extends State<SignupView> {
       setState(() => error = "Signup failed");
     }
   }
+  Future<void> _signInWithGoogle() async {
+
+    try {
+      if (selectedRole == null) {
+        setState(() => error = "Please select a role before continuing with Google");
+        return;
+      }
+      final roleParam = selectedRole!.toLowerCase();
+      final backendUrl = "$_baseUrl/auth/google/url?role=$roleParam";
+      final url = Uri.parse(backendUrl);
+
+      if (!await launchUrl(url, mode: LaunchMode.platformDefault)) {
+        // Fallback to in-app web view if platform default fails
+        if (!await launchUrl(url, mode: LaunchMode.inAppWebView)) {
+          throw 'Could not launch $url';
+        }
+      }
+    } catch (e) {
+      print("Error launching OAuth URL: $e");
+    }
+  }
+  void _listenForDeepLinks() {
+    platform.setMethodCallHandler((call) async {
+      if (call.method == 'onDeepLink') {
+        final link = call.arguments as String;
+        final uri = Uri.parse(link);
+
+        final token = uri.queryParameters['token'];
+        final email = uri.queryParameters['email'];
+        final role = uri.queryParameters['role'];
+
+        print("✅ Google Auth Success");
+        print("Token: $token");
+        print("Email: $email");
+        print("Role: $role");
+
+        // TODO: Save token securely (if needed)
+
+        // Navigate based on role
+        if (role == 'attendee') {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AttendeeHomeView()));
+        } else if (role == 'host') {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HostHomeView()));
+        } else {
+          print("❌ Unknown role");
+        }
+      }
+    });
+  }
+  @override
+  void initState() {
+    super.initState();
+    _listenForDeepLinks();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screen_height=MediaQuery.of(context).size.height;
@@ -206,8 +267,8 @@ class _SignupViewState extends State<SignupView> {
                       width: 24,
                     ),
                     label: const Text('Continue with Google'),
-                    // onPressed: _signInWithGoogle,
-                    onPressed: (){},
+                    onPressed: _signInWithGoogle,
+                    // onPressed: (){},
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                       textStyle: const TextStyle(fontSize: 16),
