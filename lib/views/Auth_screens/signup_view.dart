@@ -1,6 +1,10 @@
+import 'package:eventzone_frontend/service/auth_service/auth_service.dart';
 import 'package:eventzone_frontend/views/Auth_screens/login_view.dart';
 import 'package:flutter/material.dart';
 
+import '../attendee/attendee_home_view.dart';
+import '../host/host_home_view.dart';
+enum UserRole { attendee, host }
 class SignupView extends StatefulWidget {
   const SignupView({super.key});
 
@@ -17,6 +21,9 @@ class _SignupViewState extends State<SignupView> {
   final _roleController=TextEditingController();
   String? selectedRole;
   final List<String> roles = ['Attendee', 'Host'];
+  final AuthService _authService=AuthService();
+  // UserRole? selectedRole;
+  String? error;
 
   InputDecoration buildInputDecoration(String labelText,) {
     return InputDecoration(
@@ -80,6 +87,36 @@ class _SignupViewState extends State<SignupView> {
       ),
     );
   }
+
+  void _signup() async {
+    try {
+      if (selectedRole == null) {
+        setState(() => error = "Please select a role");
+        debugPrint("Signup failed: No role selected");
+        return;
+      }
+
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      final fullname=_fullnameController.text;
+
+      debugPrint("Attempting signup for role: $selectedRole");
+
+      if (selectedRole == UserRole.attendee) {
+        final user = await _authService.signupAttendee(email, password,fullname);
+        debugPrint("Attendee signup success: ${user?.email}");
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AttendeeHomeView()));
+      } else {
+        final user = await _authService.signupHost(email, password,fullname);
+        debugPrint("Host signup success: ${user?.email}");
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HostHomeView()));
+      }
+
+    } catch (e) {
+      debugPrint("Signup error: $e");
+      setState(() => error = "Signup failed");
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final screen_height=MediaQuery.of(context).size.height;
@@ -129,7 +166,7 @@ class _SignupViewState extends State<SignupView> {
                 SizedBox(height: screen_height/50,),
                 ElevatedButton(
                   style: raisedButtonStyle,
-                  onPressed: (){},
+                  onPressed: _signup,
                   child: const Text(
                     "Signup",
                     style: TextStyle(

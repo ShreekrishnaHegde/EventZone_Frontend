@@ -1,5 +1,9 @@
+import 'package:eventzone_frontend/service/auth_service/auth_service.dart';
 import 'package:eventzone_frontend/views/Auth_screens/signup_view.dart';
 import 'package:flutter/material.dart';
+
+import '../attendee/attendee_home_view.dart';
+import '../host/host_home_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -13,6 +17,7 @@ class _LoginViewState extends State<LoginView> {
   final _passwordController = TextEditingController();
   String? error;
   bool _obscureText = true;
+  final AuthService _authService=AuthService();
 
   InputDecoration buildInputDecoration(String labelText,IconData icon) {
     return InputDecoration(
@@ -41,8 +46,17 @@ class _LoginViewState extends State<LoginView> {
     ),
   );
 
-  void _login() async{
-
+  void _login() async {
+    try {
+      final user = await _authService.login(_emailController.text, _passwordController.text);
+      if (user?.role == "ATTENDEE") {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AttendeeHomeView()));
+      } else if (user?.role == "HOST") {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HostHomeView()));
+      }
+    } catch (e) {
+      setState(() => error = "Login failed");
+    }
   }
   @override
   Widget build(BuildContext context) {

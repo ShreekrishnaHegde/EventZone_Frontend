@@ -1,7 +1,10 @@
-import 'package:eventzone_frontend/views/Auth_screens/login_view.dart';
+import 'package:eventzone_frontend/service/auth_service/auth_gate.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async{
+  await dotenv.load();
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -16,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const LoginView(),
+      home: AuthGate(),
     );
   }
 }

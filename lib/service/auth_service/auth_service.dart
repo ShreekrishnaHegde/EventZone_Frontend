@@ -25,12 +25,12 @@ class AuthService {
     throw Exception('Login failed');
   }
 
-  Future<AuthResponse?> signupAttendee(String email, String password) async {
+  Future<AuthResponse?> signupAttendee(String email, String password,String fullname) async {
 
     final response = await http.post(
       Uri.parse('$_baseUrl/api/auth/signup/attendee'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({'email': email, 'password': password,'fullname':fullname}),
     );
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
@@ -43,12 +43,12 @@ class AuthService {
     }
     throw Exception('Signup failed');
   }
-  Future<AuthResponse?> signupHost( String email, String password) async {
+  Future<AuthResponse?> signupHost( String email, String password,String fullname) async {
 
     final response = await http.post(
       Uri.parse('$_baseUrl/api/auth/signup/host'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({'email': email, 'password': password,'fullname':fullname}),
     );
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
