@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/auth_response.dart';
-import '../storage/storage.dart';
+import '../../models/auth_response.dart';
+import '../../storage/storage.dart';
 
 class AuthService {
   final _baseUrl = dotenv.env['BASE_URL']!;
