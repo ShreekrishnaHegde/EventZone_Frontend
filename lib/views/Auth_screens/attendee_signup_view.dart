@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:eventzone_frontend/views/Auth_screens/signup_choice_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -69,6 +70,20 @@ class _AttendeeSignupViewState extends State<AttendeeSignupView> {
     final screen_height=MediaQuery.of(context).size.height;
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const SignUpChoiceView()), // import this
+            );
+          },
+
+        ),
+        backgroundColor: Colors.deepPurple,
+        elevation: 2,
+      ),
       body: Center(
         child: SafeArea(
           child: Padding(
