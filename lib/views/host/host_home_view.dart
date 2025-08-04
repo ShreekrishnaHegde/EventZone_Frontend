@@ -65,6 +65,38 @@ class _HostHomeViewState extends State<HostHomeView> {
           "Host"
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        // currentIndex: _selectedIndex == 1 ? 0 : _selectedIndex,
+        // onTap: _onItemTapped,
+        backgroundColor: Colors.white,
+        selectedItemColor: Colors.indigo,
+        unselectedItemColor: Colors.grey,
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.indigo,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.add,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            label: '', // Empty label for center icon
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'My Events',
+          ),
+        ],
+      ),
     );
   }
 }
