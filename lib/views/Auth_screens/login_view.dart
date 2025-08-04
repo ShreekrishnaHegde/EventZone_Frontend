@@ -1,5 +1,5 @@
 import 'package:eventzone_frontend/service/auth_service/auth_service.dart';
-import 'package:eventzone_frontend/views/Auth_screens/signup_view.dart';
+import 'package:eventzone_frontend/views/Auth_screens/signup_choice_view.dart';
 import 'package:flutter/material.dart';
 
 import '../attendee/attendee_home_view.dart';
@@ -148,7 +148,7 @@ class _LoginViewState extends State<LoginView> {
                         overlayColor: WidgetStateProperty.all(Colors.transparent),
                       ),
                       onPressed: (){
-                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignupView()));
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignUpChoiceView()));
                       },
                       child: const Text(
                         "SignUp",
