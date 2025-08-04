@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../service/auth_service/auth_service.dart';
+import '../attendee/attendee_home_view.dart';
 import 'login_view.dart';
 
 class AttendeeSignupView extends StatefulWidget {
@@ -22,7 +23,6 @@ class _AttendeeSignupViewState extends State<AttendeeSignupView> {
   final _passwordController=TextEditingController();
   final _confirmPasswordController=TextEditingController();
   final _fullnameController=TextEditingController();
-  final _roleController=TextEditingController();
   String selectedRole="Attendee";
   final AuthService _authService=AuthService();
   final _baseUrl = dotenv.env['BASE_URL']!;
@@ -63,6 +63,29 @@ class _AttendeeSignupViewState extends State<AttendeeSignupView> {
       obscureText: obscure,
       decoration: buildInputDecoration(label),
     );
+  }
+  void _signup() async {
+    try {
+      if (selectedRole == null) {
+        setState(() => error = "Please select a role");
+        debugPrint("Signup failed: No role selected");
+        return;
+      }
+
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+
+      debugPrint("Attempting signup for role: $selectedRole");
+
+      final user = await _authService.signupAttendee(email, password);
+      debugPrint("Attendee signup success: ${user?.email}");
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AttendeeHomeView()));
+
+    } catch (e) {
+      debugPrint("Signup error: $e");
+      setState(() => error = "Signup failed");
+    }
   }
 
   @override
@@ -126,8 +149,8 @@ class _AttendeeSignupViewState extends State<AttendeeSignupView> {
                 SizedBox(height: screen_height/50,),
                 ElevatedButton(
                   style: raisedButtonStyle,
-                  // onPressed: _signup,
-                  onPressed: (){},
+                  onPressed: _signup,
+                  // onPressed: (){},
                   child: const Text(
                     "Signup",
                     style: TextStyle(

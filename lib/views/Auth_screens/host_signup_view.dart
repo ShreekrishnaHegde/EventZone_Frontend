@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:eventzone_frontend/views/Auth_screens/signup_choice_view.dart';
+import 'package:eventzone_frontend/views/host/host_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -22,7 +23,6 @@ class _HostSignupViewState extends State<HostSignupView> {
   final _passwordController=TextEditingController();
   final _confirmPasswordController=TextEditingController();
   final _fullnameController=TextEditingController();
-  final _roleController=TextEditingController();
   String selectedRole="Attendee";
   final AuthService _authService=AuthService();
   final _baseUrl = dotenv.env['BASE_URL']!;
@@ -63,6 +63,29 @@ class _HostSignupViewState extends State<HostSignupView> {
       obscureText: obscure,
       decoration: buildInputDecoration(label),
     );
+  }
+  void _signup() async {
+    try {
+      if (selectedRole == null) {
+        setState(() => error = "Please select a role");
+        debugPrint("Signup failed: No role selected");
+        return;
+      }
+
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+
+      debugPrint("Attempting signup for role: $selectedRole");
+
+      final user = await _authService.signupHost(email, password);
+      debugPrint("Host signup success: ${user?.email}");
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HostHomeView()));
+
+    } catch (e) {
+      debugPrint("Signup error: $e");
+      setState(() => error = "Signup failed");
+    }
   }
   @override
   Widget build(BuildContext context) {
@@ -125,8 +148,8 @@ class _HostSignupViewState extends State<HostSignupView> {
                 SizedBox(height: screen_height/50,),
                 ElevatedButton(
                   style: raisedButtonStyle,
-                  // onPressed: _signup,
-                  onPressed: (){},
+                  onPressed: _signup,
+                  // onPressed: (){},
                   child: const Text(
                     "Signup",
                     style: TextStyle(
