@@ -27,16 +27,19 @@ class _HostHomeViewState extends State<HostHomeView> {
               decoration: const BoxDecoration(
                 color: Colors.deepPurple,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Icon(Icons.person, size: 48, color: Colors.white),
-                  SizedBox(height: 10),
-                  Text(
-                    "Welcome Host",
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      'H',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28,
+                        color: Colors.lightBlue,
+                      ),
                     ),
                   ),
                 ],
@@ -89,7 +92,7 @@ class _HostHomeViewState extends State<HostHomeView> {
                 size: 28,
               ),
             ),
-            label: '', // Empty label for center icon
+            label: 'Add an event', // Empty label for center icon
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.history),
