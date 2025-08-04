@@ -5,6 +5,7 @@ import 'package:eventzone_frontend/views/host/host_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../service/auth_service/auth_service.dart';
 import 'login_view.dart';
@@ -23,7 +24,7 @@ class _HostSignupViewState extends State<HostSignupView> {
   final _passwordController=TextEditingController();
   final _confirmPasswordController=TextEditingController();
   final _fullnameController=TextEditingController();
-  String selectedRole="Attendee";
+  String selectedRole="host";
   final AuthService _authService=AuthService();
   final _baseUrl = dotenv.env['BASE_URL']!;
   String? error;
@@ -86,6 +87,49 @@ class _HostSignupViewState extends State<HostSignupView> {
       debugPrint("Signup error: $e");
       setState(() => error = "Signup failed");
     }
+  }
+  Future<void> _signInWithGoogle() async {
+
+    try {
+      if (selectedRole == null) {
+        setState(() => error = "Please select a role before continuing with Google");
+        return;
+      }
+      final roleParam = selectedRole!.toLowerCase();
+      final backendUrl = "$_baseUrl/auth/google/url?role=$roleParam";
+      final url = Uri.parse(backendUrl);
+
+      if (!await launchUrl(url, mode: LaunchMode.platformDefault)) {
+        // Fallback to in-app web view if platform default fails
+        if (!await launchUrl(url, mode: LaunchMode.inAppWebView)) {
+          throw 'Could not launch $url';
+        }
+      }
+    } catch (e) {
+      print("Error launching OAuth URL: $e");
+    }
+  }
+  void _listenForDeepLinks() {
+    platform.setMethodCallHandler((call) async {
+      if (call.method == 'onDeepLink') {
+        final link = call.arguments as String;
+        final uri = Uri.parse(link);
+
+        final token = uri.queryParameters['token'];
+        final email = uri.queryParameters['email'];
+        final role = uri.queryParameters['role'];
+        print("Google Auth Success");
+        print("Token: $token");
+        print("Email: $email");
+        print("Role: $role");
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HostHomeView()));
+      }
+    });
+  }
+  @override
+  void initState() {
+    super.initState();
+    _listenForDeepLinks();
   }
   @override
   Widget build(BuildContext context) {
@@ -189,8 +233,8 @@ class _HostSignupViewState extends State<HostSignupView> {
                       width: 24,
                     ),
                     label: const Text('Continue with Google'),
-                    // onPressed: _signInWithGoogle,
-                    onPressed: (){},
+                    onPressed: _signInWithGoogle,
+                    // onPressed: (){},
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                       textStyle: const TextStyle(fontSize: 16),
