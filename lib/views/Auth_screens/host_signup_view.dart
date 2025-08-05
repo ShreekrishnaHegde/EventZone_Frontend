@@ -31,7 +31,6 @@ class _HostSignupViewState extends State<HostSignupView> {
   final _emailController=TextEditingController();
   final _passwordController=TextEditingController();
   final _confirmPasswordController=TextEditingController();
-  final _phoneNumberController=TextEditingController();
 
   InputDecoration buildInputDecoration(String labelText,) {
     return InputDecoration(
@@ -76,33 +75,26 @@ class _HostSignupViewState extends State<HostSignupView> {
     TextEditingController? controller,
     bool obscure=false,
     String? Function(String?)? validator,
-    TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
   }){
     return TextFormField(
       controller: controller,
       obscureText: obscure,
       decoration: buildInputDecoration(label),
-      validator: validator,
-      inputFormatters: inputFormatters,
+      validator: validator
     );
   }
 
   Future<void> _signup() async {
     if(!_formKey.currentState!.validate())return;
     try {
+      final clubName=_clubNameController.text;
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
-
-
-      debugPrint("Attempting signup for role: $selectedRole");
-
-      final user = await _authService.signupHost(email, password);
-      debugPrint("Host signup success: ${user?.email}");
+      await _authService.signupHost(clubName,email,password);
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HostHomeView()));
 
     } catch (e) {
-      debugPrint("Signup error: $e");
       setState(() => error = "Signup failed");
     }
   }
@@ -250,22 +242,9 @@ class _HostSignupViewState extends State<HostSignupView> {
                       }
                   ),
                   SizedBox(height: screen_height/50,),
-                  buildTextField(
-                    label: "Phone Number",
-                    controller: _phoneNumberController,
-                    validator: (value){
-                      if (value == null || value.isEmpty) return "Phone number is required";
-                      if (value.length < 10) return "Enter a valid phone number";
-                      return null;
-                    },
-                    keyboardType: TextInputType.phone,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  ),
-                  SizedBox(height: screen_height/50,),
                   ElevatedButton(
                     style: raisedButtonStyle,
                     onPressed: _signup,
-                    // onPressed: (){},
                     child: const Text(
                       "Signup",
                       style: TextStyle(
