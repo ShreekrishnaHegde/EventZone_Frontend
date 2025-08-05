@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:eventzone_frontend/views/Auth_screens/signup_choice_view.dart';
 import 'package:eventzone_frontend/views/host/host_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../service/auth_service/auth_service.dart';
@@ -100,7 +102,6 @@ class _HostSignupViewState extends State<HostSignupView> {
       final url = Uri.parse(backendUrl);
 
       if (!await launchUrl(url, mode: LaunchMode.platformDefault)) {
-        // Fallback to in-app web view if platform default fails
         if (!await launchUrl(url, mode: LaunchMode.inAppWebView)) {
           throw 'Could not launch $url';
         }
@@ -126,6 +127,17 @@ class _HostSignupViewState extends State<HostSignupView> {
       }
     });
   }
+  File? _imageFile;
+
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -189,6 +201,24 @@ class _HostSignupViewState extends State<HostSignupView> {
                 buildTextField(label: "Password", controller: _passwordController, obscure: true),
                 SizedBox(height: screen_height/50,),
                 buildTextField(label: "Confirm Password", controller: _confirmPasswordController, obscure: true),
+
+                SizedBox(height: screen_height / 50),
+                Text("Club Logo", style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: _imageFile != null
+                        ? FileImage(_imageFile!)
+                        : const NetworkImage('https://res.cloudinary.com/demo/image/upload/v1690000000/default-logo.png') as ImageProvider,
+                    child: _imageFile == null
+                        ? const Icon(Icons.add_a_photo, size: 30, color: Colors.white)
+                        : null,
+                  ),
+                ),
+
+
                 SizedBox(height: screen_height/50,),
                 ElevatedButton(
                   style: raisedButtonStyle,
