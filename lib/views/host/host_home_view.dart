@@ -1,6 +1,8 @@
 import 'package:eventzone_frontend/service/auth_service/auth_service.dart';
 import 'package:flutter/material.dart';
 
+import 'add_event_screen.dart';
+
 class HostHomeView extends StatefulWidget {
   const HostHomeView({super.key});
 
@@ -9,10 +11,31 @@ class HostHomeView extends StatefulWidget {
 }
 
 class _HostHomeViewState extends State<HostHomeView> {
-  final _authService=AuthService();
-  void _logout(BuildContext context)async{
+  final _authService = AuthService();
+
+  void _logout(BuildContext context) async {
     _authService.logout();
   }
+
+  int _selectedIndex = 0;
+  void _onItemTapped(int index) {
+    if (index == 1) {
+      // Add Event button tapped
+      _navigateToAddEventScreen();
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+
+  void _navigateToAddEventScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddEventScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,13 +87,11 @@ class _HostHomeViewState extends State<HostHomeView> {
         ),
       ),
       body: Center(
-        child: Text(
-          "Host"
-        ),
+        child: Text("Host screen index: $_selectedIndex"),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        // currentIndex: _selectedIndex == 1 ? 0 : _selectedIndex,
-        // onTap: _onItemTapped,
+        currentIndex: _selectedIndex == 1 ? 0 : _selectedIndex, // don't highlight center button
+        onTap: _onItemTapped,
         backgroundColor: Colors.white,
         selectedItemColor: Colors.indigo,
         unselectedItemColor: Colors.grey,
@@ -92,7 +113,7 @@ class _HostHomeViewState extends State<HostHomeView> {
                 size: 28,
               ),
             ),
-            label: 'Add an event', // Empty label for center icon
+            label: '', // No label for center button
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.history),
