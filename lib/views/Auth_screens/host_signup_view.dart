@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:eventzone_frontend/views/Auth_screens/signup_choice_view.dart';
 import 'package:eventzone_frontend/views/host/host_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../service/auth_service/auth_service.dart';

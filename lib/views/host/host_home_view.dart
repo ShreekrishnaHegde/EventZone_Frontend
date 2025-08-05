@@ -2,6 +2,7 @@ import 'package:eventzone_frontend/service/auth_service/auth_service.dart';
 import 'package:flutter/material.dart';
 
 import 'add_event_screen.dart';
+import 'host_profile_screen.dart';
 
 class HostHomeView extends StatefulWidget {
   const HostHomeView({super.key});
@@ -73,8 +74,9 @@ class _HostHomeViewState extends State<HostHomeView> {
               title: const Text("Profile"),
               onTap: () {
                 Navigator.pop(context); // Close drawer
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Profile screen coming soon")),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HostProfileScreen()),
                 );
               },
             ),
