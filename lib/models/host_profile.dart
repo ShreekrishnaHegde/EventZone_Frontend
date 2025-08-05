@@ -38,7 +38,7 @@ class HostProfile{
     return {
       'email': email,
       'role': role,
-      'clubname': clubName,
+      'clubName': clubName,
       'clubDescription': clubDescription,
       'clubLogo': clubLogo,
       'phoneNumber': phoneNumber,

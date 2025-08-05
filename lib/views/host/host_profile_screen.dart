@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:eventzone_frontend/service/host_service/host_profile_service.dart';
 import 'package:flutter/material.dart';
@@ -31,37 +32,150 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
   void initState() {
     super.initState();
     _profileFuture = _hostProfileService.fetchProfile();
+
   }
 
-  void _handleLogoTap() async {
-    if (_logoImage == null) {
-      final picker = ImagePicker();
-      final XFile? picked = await picker.pickImage(source: ImageSource.gallery);
-      if (picked != null && mounted) {
-        setState(() {
-          _logoImage = File(picked.path);
-        });
-      }
-    } else {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("Remove Logo"),
-          content: const Text("Do you want to remove the selected image?"),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Remove")),
-          ],
-        ),
-      );
+  void _showImageOptions(String? currentImageUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (context) {
+        return Stack(
+          children: [
+            // Blurred background
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+              ),
+            ),
 
-      if (confirm == true && mounted) {
-        setState(() {
-          _logoImage = null;
-        });
+            // Main Content
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Circular profile image
+                Center(
+                  child: CircleAvatar(
+                    radius: 90,
+                    backgroundColor: Colors.grey[300],
+                    backgroundImage: currentImageUrl != null && currentImageUrl.isNotEmpty
+                        ? NetworkImage(currentImageUrl)
+                        : null,
+                    child: currentImageUrl == null || currentImageUrl.isEmpty
+                        ? const Icon(Icons.account_circle, size: 80, color: Colors.grey)
+                        : null,
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Action buttons at the bottom
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Delete Icon
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.black.withOpacity(0.6),
+                        child: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.redAccent, size: 26),
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            await _deleteProfileImage();
+                          },
+                        ),
+                      ),
+
+                      // Edit Icon
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.black.withOpacity(0.6),
+                        child: IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.white, size: 26),
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            await _pickNewImage();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  Future<void> _pickNewImage() async {
+    final picker = ImagePicker();
+    final XFile? picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null && mounted) {
+      setState(() {
+        _logoImage = File(picked.path);
+      });
+
+      try {
+        final success = await _hostProfileService.updateProfile(
+          clubName: _clubNameController.text,
+          description: _descriptionController.text,
+          phoneNumber: _phoneController.text,
+          website: _websiteController.text,
+          instagram: _instagramController.text,
+          linkedin: _linkedinController.text,
+          logoImage: _logoImage,
+        );
+
+        if (success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Profile picture updated")),
+          );
+          setState(() {
+            _profileFuture = _hostProfileService.fetchProfile(); // Refresh
+          });
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to upload image: $e")),
+        );
       }
     }
   }
+
+  Future<void> _deleteProfileImage() async {
+    try {
+      final success = await _hostProfileService.updateProfile(
+        clubName: _clubNameController.text,
+        description: _descriptionController.text,
+        phoneNumber: _phoneController.text,
+        website: _websiteController.text,
+        instagram: _instagramController.text,
+        linkedin: _linkedinController.text,
+        logoImage: null, // triggers Cloudinary deletion
+      );
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile picture removed")),
+        );
+        setState(() {
+          _logoImage = null;
+          _profileFuture = _hostProfileService.fetchProfile(); // Refresh
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to delete image: $e")),
+      );
+    }
+  }
+
 
   void _saveProfile() async {
     // if (_formKey.currentState!.validate()) {
@@ -147,31 +261,21 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
               child: Column(
                 children: [
                   GestureDetector(
-                    onTap: _handleLogoTap,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.grey[300],
-                          backgroundImage: _logoImage != null ? FileImage(_logoImage!) : null,
-                          child: _logoImage == null
-                              ? const Icon(Icons.add_a_photo, size: 30, color: Colors.grey)
-                              : null,
-                        ),
-                        if (_logoImage != null)
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: CircleAvatar(
-                              radius: 14,
-                              backgroundColor: Colors.white,
-                              child: const Icon(Icons.delete, size: 18, color: Colors.redAccent),
-                            ),
-                          ),
-                      ],
+                    onTap: () => _showImageOptions(profile.clubLogo),
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage: _logoImage != null
+                          ? FileImage(_logoImage!) as ImageProvider
+                          : (profile.clubLogo != null && profile.clubLogo!.isNotEmpty
+                          ? NetworkImage(profile.clubLogo)
+                          : null),
+                      child: _logoImage == null && (profile.clubLogo.isEmpty)
+                          ? const Icon(Icons.add_a_photo, size: 30, color: Colors.grey)
+                          : null,
                     ),
                   ),
+
                   const SizedBox(height: 20),
 
                   TextFormField(
