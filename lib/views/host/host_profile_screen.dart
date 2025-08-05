@@ -35,7 +35,7 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
 
   void _handleLogoTap() async {
     if (_logoImage == null) {
-      final ImagePicker picker = ImagePicker();
+      final picker = ImagePicker();
       final XFile? picked = await picker.pickImage(source: ImageSource.gallery);
       if (picked != null && mounted) {
         setState(() {
@@ -43,7 +43,6 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
         });
       }
     } else {
-      // Optional: ask before removing
       final confirm = await showDialog<bool>(
         context: context,
         builder: (_) => AlertDialog(
@@ -64,55 +63,65 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
     }
   }
 
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
-      // You would call _hostProfileService.updateProfile(...) here
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile saved successfully!")),
-      );
-    }
+  void _saveProfile() async {
+    // if (_formKey.currentState!.validate()) {
+      try {
+        final success = await _hostProfileService.updateProfile(
+          clubName: _clubNameController.text,
+          description: _descriptionController.text,
+          phoneNumber: _phoneController.text,
+          website: _websiteController.text,
+          instagram: _instagramController.text,
+          linkedin: _linkedinController.text,
+          logoImage: _logoImage,
+        );
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Profile updated successfully")),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to update profile: $e")),
+        );
+      }
+    // }
   }
 
-  Widget _buildReadOnlyField(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
-        readOnly: true,
-        initialValue: value,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
+
+  InputDecoration buildInputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: Colors.grey),
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      enabledBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: Colors.grey),
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: Color(0xFF140447), width: 2.0),
+        borderRadius: BorderRadius.circular(8.0),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
-        controller: controller,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return "Please enter $label";
-          }
-          return null;
-        },
-      ),
-    );
-  }
+  final ButtonStyle raisedButtonStyle = ElevatedButton.styleFrom(
+    foregroundColor: Colors.white,
+    backgroundColor: const Color(0xFF140447),
+    minimumSize: const Size(double.infinity, 50),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Host Profile"),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: const Color(0xFF140447),
       ),
       body: FutureBuilder<HostProfile>(
         future: _profileFuture,
@@ -137,7 +146,6 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  // Logo Avatar Section with Tap-to-Add/Delete
                   GestureDetector(
                     onTap: _handleLogoTap,
                     child: Stack(
@@ -164,24 +172,68 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 20),
-                  _buildReadOnlyField("Email", profile.email),
-                  _buildReadOnlyField("Role", profile.role),
-                  _buildTextField("Club Name", _clubNameController),
-                  _buildTextField("Description", _descriptionController, maxLines: 3),
-                  _buildTextField("Phone", _phoneController),
-                  _buildTextField("Website", _websiteController),
-                  _buildTextField("Instagram", _instagramController),
-                  _buildTextField("LinkedIn", _linkedinController),
 
+                  TextFormField(
+                    readOnly: true,
+                    initialValue: profile.email,
+                    decoration: buildInputDecoration("Email", Icons.email),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    readOnly: true,
+                    initialValue: profile.role,
+                    decoration: buildInputDecoration("Role", Icons.person),
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: _clubNameController,
+                    decoration: buildInputDecoration("Club Name", Icons.home),
+                    validator: (value) => value == null || value.isEmpty ? "Enter club name" : null,
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: _descriptionController,
+                    maxLines: 3,
+                    decoration: buildInputDecoration("Description", Icons.description),
+                    validator: (value) => value == null || value.isEmpty ? "Enter description" : null,
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: buildInputDecoration("Phone", Icons.phone),
+                    validator: (value) => value == null || value.isEmpty ? "Enter phone" : null,
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: _websiteController,
+                    decoration: buildInputDecoration("Website", Icons.language),
+                    validator: (value) => value == null || value.isEmpty ? "Enter website" : null,
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: _instagramController,
+                    decoration: buildInputDecoration("Instagram", Icons.camera_alt),
+                    validator: (value) => value == null || value.isEmpty ? "Enter Instagram" : null,
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: _linkedinController,
+                    decoration: buildInputDecoration("LinkedIn", Icons.business),
+                    validator: (value) => value == null || value.isEmpty ? "Enter LinkedIn" : null,
+                  ),
                   const SizedBox(height: 20),
+
                   ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      minimumSize: const Size.fromHeight(50),
-                    ),
+                    style: raisedButtonStyle,
                     onPressed: _saveProfile,
+                    // onPressed: (){},
                     icon: const Icon(Icons.save),
                     label: const Text("Save Profile"),
                   ),
