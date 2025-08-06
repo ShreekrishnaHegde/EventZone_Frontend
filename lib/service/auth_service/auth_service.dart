@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -40,15 +41,15 @@ class AuthService {
     }
     else{
       print("Error: ${response.body}");
+      throw Exception('Signup failed');
     }
-    throw Exception('Signup failed');
-  }
-  Future<AuthResponse?> signupHost( String email, String password) async {
 
+  }
+  Future<AuthResponse?> signupHost(String clubName,String email, String password) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/auth/signup/host'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({'clubName':clubName,'email': email, 'password': password}),
     );
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
@@ -56,8 +57,11 @@ class AuthService {
       await _storage.saveToken(auth.token);
       return auth;
     }
-    throw Exception('Signup failed');
+    else{
+      throw Exception('Signup failed');
+    }
   }
+
 
 
   Future<AuthResponse?> getCurrentUser() async {
