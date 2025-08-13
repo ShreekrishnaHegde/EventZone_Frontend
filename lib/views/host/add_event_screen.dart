@@ -1,7 +1,10 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+
+import '../../models/event_model.dart';
+import '../../service/host_service/host_event_service.dart';
 
 class AddEventScreen extends StatefulWidget {
   const AddEventScreen({super.key});
@@ -12,9 +15,9 @@ class AddEventScreen extends StatefulWidget {
 
 class _AddEventScreenState extends State<AddEventScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _locationController = TextEditingController();
 
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
@@ -44,7 +47,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
     if (pickedFile != null) setState(() => _image = File(pickedFile.path));
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedDate == null || _selectedTime == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -53,127 +56,186 @@ class _AddEventScreenState extends State<AddEventScreen> {
         return;
       }
 
-      // Combine date and time
-      final DateTime eventDateTime = DateTime(
-        _selectedDate!.year,
-        _selectedDate!.month,
-        _selectedDate!.day,
-        _selectedTime!.hour,
-        _selectedTime!.minute,
-      );
+      try {
+        final success = await EventService().createOrUpdateEvent(
+          title: _nameController.text,
+          description: _descriptionController.text,
+          date: DateTime(
+            _selectedDate!.year,
+            _selectedDate!.month,
+            _selectedDate!.day,
+          ),
+          location: _locationController.text,
+          time:
+          "${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}",
+          imageFile: _image, // null if not picked
+        );
 
-      // Upload logic here...
-      print("Event Name: ${_nameController.text}");
-      print("Description: ${_descriptionController.text}");
-      print("Location: ${_locationController.text}");
-      print("DateTime: $eventDateTime");
-      print("Image selected: ${_image != null}");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Event submitted")),
-      );
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Event submitted successfully")),
+          );
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Failed to submit event")),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
+      }
     }
   }
 
+
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Add Event"),
         backgroundColor: Colors.deepPurple,
+        centerTitle: true,
+        elevation: 4,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Event Name
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: "Event Name"),
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Required' : null,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Description
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: "Description"),
-                maxLines: 3,
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Required' : null,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Location
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(labelText: "Location"),
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Required' : null,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Date Picker
-              Row(
+        child: Card(
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
                 children: [
-                  // Expanded(
-                  //   child: Text(_selectedDate == null
-                  //       ? "No date chosen"
-                  //       : DateFormat('yyyy-MM-dd').format(_selectedDate!)),
-                  // ),
-                  TextButton(
-                    onPressed: _pickDate,
-                    child: const Text("Pick Date"),
+                  // Event Name
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: "Event Name",
+                      prefixIcon: Icon(Icons.event),
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                    value == null || value.isEmpty ? 'Required' : null,
                   ),
-                ],
-              ),
+                  const SizedBox(height: 16),
 
-              // Time Picker
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(_selectedTime == null
-                        ? "No time chosen"
+                  // Description
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: "Description",
+                      prefixIcon: Icon(Icons.description),
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                    validator: (value) =>
+                    value == null || value.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Location
+                  TextFormField(
+                    controller: _locationController,
+                    decoration: const InputDecoration(
+                      labelText: "Location",
+                      prefixIcon: Icon(Icons.location_on),
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                    value == null || value.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Date Picker
+                  ListTile(
+                    leading: const Icon(Icons.date_range),
+                    title: Text(_selectedDate == null
+                        ? "Select Date"
+                        : DateFormat('yMMMd').format(_selectedDate!)),
+                    trailing: ElevatedButton(
+                      onPressed: _pickDate,
+                      child: const Text("Pick"),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Time Picker
+                  ListTile(
+                    leading: const Icon(Icons.access_time),
+                    title: Text(_selectedTime == null
+                        ? "Select Time"
                         : _selectedTime!.format(context)),
+                    trailing: ElevatedButton(
+                      onPressed: _pickTime,
+                      child: const Text("Pick"),
+                    ),
                   ),
-                  TextButton(
-                    onPressed: _pickTime,
-                    child: const Text("Pick Time"),
+                  const SizedBox(height: 16),
+
+                  // Image Picker
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        height: 180,
+                        width: double.infinity,
+                        color: Colors.grey.shade200,
+                        child: _image == null
+                            ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.add_a_photo, size: 40),
+                            SizedBox(height: 8),
+                            Text("Tap to pick image"),
+                          ],
+                        )
+                            : Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.file(_image!, fit: BoxFit.cover),
+                            Container(
+                              color: Colors.black26,
+                              child: const Center(
+                                child: Icon(Icons.edit,
+                                    color: Colors.white, size: 40),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Submit Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: _submitForm,
+                      icon: const Icon(Icons.send),
+                      label: const Text(
+                        "Add Event",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 12),
-
-              // Image Picker
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  height: 180,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    color: Colors.grey.shade200,
-                  ),
-                  child: _image == null
-                      ? const Center(child: Text("Tap to pick image"))
-                      : Image.file(_image!, fit: BoxFit.cover),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Submit Button
-              ElevatedButton.icon(
-                onPressed: _submitForm,
-                icon: const Icon(Icons.send),
-                label: const Text("Add"),
-              ),
-            ],
+            ),
           ),
         ),
       ),
