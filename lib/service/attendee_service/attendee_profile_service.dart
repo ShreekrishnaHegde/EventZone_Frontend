@@ -14,7 +14,7 @@ class AttendeeProfileService{
     if (token == null) throw Exception("Not Logged in ");
 
     final response = await http.get(
-      Uri.parse("$_baseUrl/api/host/profile"),
+      Uri.parse("$_baseUrl/api/attendee/profile"),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

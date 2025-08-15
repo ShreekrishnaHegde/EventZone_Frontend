@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../service/auth_service/auth_gate.dart';
 import '../../service/auth_service/auth_service.dart';
+import 'attendee_profile_screen.dart';
 
 class AttendeeHomeView extends StatefulWidget {
   const AttendeeHomeView({super.key});
@@ -30,7 +32,6 @@ class _AttendeeHomeViewState extends State<AttendeeHomeView> {
   final AuthService _authService=AuthService();
   void _logout(BuildContext context) async {
     await _authService.logout();
-    Navigator.pushReplacementNamed(context, '/login'); // Adjust to your login route
   }
   @override
   Widget build(BuildContext context) {
@@ -46,16 +47,19 @@ class _AttendeeHomeViewState extends State<AttendeeHomeView> {
               decoration: const BoxDecoration(
                 color: Colors.deepPurple,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Icon(Icons.person, size: 48, color: Colors.white),
-                  SizedBox(height: 10),
-                  Text(
-                    "Welcome Attendee",
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      'H',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28,
+                        color: Colors.lightBlue,
+                      ),
                     ),
                   ),
                 ],
@@ -66,15 +70,19 @@ class _AttendeeHomeViewState extends State<AttendeeHomeView> {
               title: const Text("Profile"),
               onTap: () {
                 Navigator.pop(context); // Close drawer
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Profile screen coming soon")),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AttendeeProfileScreen()),
                 );
               },
             ),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text("Logout"),
-              onTap: () => _logout(context),
+              onTap: (){
+                _logout(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => AuthGate()));
+              },
             ),
           ],
         ),
@@ -112,6 +120,7 @@ class _AttendeeHomeViewState extends State<AttendeeHomeView> {
           },
         ),
       ),
+
     );
   }
 }
