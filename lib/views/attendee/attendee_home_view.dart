@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-
+import '../../models/event_model.dart';
 import '../../service/auth_service/auth_gate.dart';
 import '../../service/auth_service/auth_service.dart';
-import 'attendee_profile_screen.dart';
+import '../../service/event_service/event_service.dart';
+import '../host/host_profile_screen.dart';
 
 class AttendeeHomeView extends StatefulWidget {
   const AttendeeHomeView({super.key});
@@ -12,33 +13,53 @@ class AttendeeHomeView extends StatefulWidget {
 }
 
 class _AttendeeHomeViewState extends State<AttendeeHomeView> {
-  List<Map<String, String>> get dummyEvents => [
-    {
-      "title": "Tech Conference 2025",
-      "description": "Join us for the latest in AI, Flutter, and more!",
-      "date": "Aug 10, 2025",
-    },
-    {
-      "title": "Music Fest",
-      "description": "Experience a night of electrifying live music!",
-      "date": "Aug 15, 2025",
-    },
-    {
-      "title": "Startup Pitch Night",
-      "description": "Watch startups pitch their next big idea.",
-      "date": "Aug 20, 2025",
-    },
-  ];
-  final AuthService _authService=AuthService();
+  final _authService = AuthService();
+  final EventService _eventService = EventService();
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [];
   void _logout(BuildContext context) async {
-    await _authService.logout();
+    _authService.logout();
   }
+  @override
+  void initState() {
+    super.initState();
+    // Pages for nav bar
+    _pages.addAll([
+      AllEventsScreen(eventService: _eventService),
+      RegisteredEventsScreen(eventService: _eventService),
+    ]);
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Attendee Home"),
+        title: Text(_selectedIndex == 0 ? "All Events" : "My Registered Events"),
         backgroundColor: Colors.deepPurple,
+      ),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: Colors.deepPurple,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.event),
+            label: 'All Events',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.check_circle),
+            label: 'Registered',
+          ),
+        ],
       ),
       drawer: Drawer(
         child: Column(
@@ -72,7 +93,7 @@ class _AttendeeHomeViewState extends State<AttendeeHomeView> {
                 Navigator.pop(context); // Close drawer
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AttendeeProfileScreen()),
+                  MaterialPageRoute(builder: (context) => const HostProfileScreen()),
                 );
               },
             ),
@@ -87,40 +108,99 @@ class _AttendeeHomeViewState extends State<AttendeeHomeView> {
           ],
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: dummyEvents.length,
+    );
+  }
+}
+
+class AllEventsScreen extends StatelessWidget {
+  final EventService eventService;
+  const AllEventsScreen({super.key, required this.eventService});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Event>>(
+      future: eventService.fetchAllEvents(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}"));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text("No events found"));
+        }
+
+        final events = snapshot.data!;
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: events.length,
           itemBuilder: (context, index) {
-            final event = dummyEvents[index];
+            final event = events[index];
             return Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 3,
-              margin: const EdgeInsets.symmetric(vertical: 10),
               child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                title: Text(
-                  event['title']!,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    Text(event['description']!),
-                    const SizedBox(height: 6),
-                    Text(
-                      "📅 ${event['date']}",
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ],
+                leading: const Icon(Icons.event),
+                title: Text(event.title),
+                // subtitle: Text(event.clubName),
+                trailing: ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      // await eventService.registerForEvent(event.id);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Registered successfully")),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Error: $e")),
+                      );
+                    }
+                  },
+                  child: const Text("Register"),
                 ),
               ),
             );
           },
-        ),
-      ),
+        );
+      },
+    );
+  }
+}
 
+class RegisteredEventsScreen extends StatelessWidget {
+  final EventService eventService;
+  const RegisteredEventsScreen({super.key, required this.eventService});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Event>>(
+      future: eventService.fetchRegisteredEvents(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}"));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text("No registered events"));
+        }
+
+        final events = snapshot.data!;
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: events.length,
+          itemBuilder: (context, index) {
+            final event = events[index];
+            return Card(
+              child: ListTile(
+                leading: const Icon(Icons.check_circle, color: Colors.green),
+                title: Text(event.title),
+                // subtitle: Text(event.clubName),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -20,7 +20,7 @@ class AuthGate extends StatelessWidget {
         }
         final user = snapshot.data;
         if (user == null) return const LoginView();
-        if (user.role == "ATTENDEE") return const AttendeeHomeView();
+        if (user.role == "ATTENDEE") return AttendeeHomeView();
         if (user.role == "HOST") return const HostHomeView();
 
         return const LoginView(); // fallback

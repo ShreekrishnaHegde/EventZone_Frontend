@@ -50,7 +50,7 @@ class _LoginViewState extends State<LoginView> {
     try {
       final user = await _authService.login(_emailController.text, _passwordController.text);
       if (user?.role == "ATTENDEE") {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AttendeeHomeView()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) =>  AttendeeHomeView()));
       } else if (user?.role == "HOST") {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HostHomeView()));
       }

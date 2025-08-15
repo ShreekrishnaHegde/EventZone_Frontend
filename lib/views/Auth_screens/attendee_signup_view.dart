@@ -82,7 +82,7 @@ class _AttendeeSignupViewState extends State<AttendeeSignupView> {
 
       final user = await _authService.signupAttendee(email, password);
       debugPrint("Attendee signup success: ${user?.email}");
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AttendeeHomeView()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) =>  AttendeeHomeView()));
 
     } catch (e) {
       debugPrint("Signup error: $e");
@@ -123,7 +123,7 @@ class _AttendeeSignupViewState extends State<AttendeeSignupView> {
         print("Token: $token");
         print("Email: $email");
         print("Role: $role");
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AttendeeHomeView()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => AttendeeHomeView()));
       }
     });
   }
