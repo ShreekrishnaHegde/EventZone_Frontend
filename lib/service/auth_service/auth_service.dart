@@ -79,5 +79,5 @@ class AuthService {
     );
   }
 
-  Future<void> logout() => _storage.deleteToken();
+  Future<void> logout()async { await _storage.deleteToken();}
 }

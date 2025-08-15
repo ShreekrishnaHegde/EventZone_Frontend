@@ -1,6 +1,7 @@
 import 'package:eventzone_frontend/service/auth_service/auth_service.dart';
 import 'package:flutter/material.dart';
 
+import '../../service/auth_service/auth_gate.dart';
 import 'add_event_screen.dart';
 import 'host_profile_screen.dart';
 
@@ -83,7 +84,10 @@ class _HostHomeViewState extends State<HostHomeView> {
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text("Logout"),
-              onTap: () => _logout(context),
+              onTap: (){
+                _logout(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => AuthGate()));
+                },
             ),
           ],
         ),
