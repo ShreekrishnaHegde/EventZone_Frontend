@@ -61,7 +61,7 @@ class _HostSignupViewState extends State<HostSignupView> {
   }
   final ButtonStyle raisedButtonStyle = ElevatedButton.styleFrom(
     foregroundColor: Colors.white,
-    backgroundColor: Color(0xFF140447),
+      backgroundColor: Color(0xFF546E7A), // Teal
     minimumSize: Size(double.infinity,50),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -165,7 +165,8 @@ class _HostSignupViewState extends State<HostSignupView> {
           },
 
         ),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Color(0xFFFAFAFA), // Teal
+
         elevation: 2,
       ),
       body: Center(
@@ -266,7 +267,8 @@ class _HostSignupViewState extends State<HostSignupView> {
                           "Login",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF140447),
+                            color: Color(0xFFFB8C00), // Vibrant Orange
+
                           ),
                         ),
                       ),
