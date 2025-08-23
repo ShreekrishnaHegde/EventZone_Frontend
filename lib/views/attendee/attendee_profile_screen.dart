@@ -76,10 +76,10 @@ class _AttendeeProfileScreenState extends State<AttendeeProfileScreen> {
           }
 
           final profile = snapshot.data!;
-          _fullnameController.text=profile.fullname;
+          _fullnameController.text=profile.fullName;
           _collegeNameController.text=profile.collegeName;
           _branchNameController.text=profile.branchName;
-          _USNController.text=profile.USN;
+          _USNController.text=profile.usn;
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Form(
@@ -112,7 +112,7 @@ class _AttendeeProfileScreenState extends State<AttendeeProfileScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     readOnly: true,
-                    initialValue: profile.role,
+                    initialValue: "Attendee",
                     decoration: buildInputDecoration("Role", Icons.person),
                   ),
                   const SizedBox(height: 12),

@@ -15,7 +15,7 @@ class EventService {
   Future<List<Event>> fetchAllEvents() async {
     final token = await storage.getToken();
     final response = await http.get(
-      Uri.parse("$_baseUrl/all"),
+      Uri.parse("$_baseUrl/api/events/getAllEvents"),
       headers: {"Authorization": "Bearer $token"},
     );
 
@@ -42,10 +42,10 @@ class EventService {
     }
   }
 
-  Future<void> registerForEvent(int eventId) async {
+  Future<void> registerForEvent(String publicId) async {
     final token = await storage.getToken();
     final response = await http.post(
-      Uri.parse("$_baseUrl/register/$eventId"),
+      Uri.parse("$_baseUrl/api/register/$publicId"),
       headers: {"Authorization": "Bearer $token"},
     );
 

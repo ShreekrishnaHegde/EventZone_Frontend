@@ -19,12 +19,13 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
   late Future<HostProfile> _profileFuture;
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _clubNameController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _websiteController = TextEditingController();
   final TextEditingController _instagramController = TextEditingController();
   final TextEditingController _linkedinController = TextEditingController();
+  final TextEditingController _twitterController = TextEditingController();
 
   File? _logoImage;
 
@@ -123,7 +124,7 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
 
       try {
         final success = await _hostProfileService.updateProfile(
-          clubName: _clubNameController.text,
+          clubName: _nameController.text,
           description: _descriptionController.text,
           phoneNumber: _phoneController.text,
           website: _websiteController.text,
@@ -151,7 +152,7 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
   Future<void> _deleteProfileImage() async {
     try {
       final success = await _hostProfileService.updateProfile(
-        clubName: _clubNameController.text,
+        clubName: _nameController.text,
         description: _descriptionController.text,
         phoneNumber: _phoneController.text,
         website: _websiteController.text,
@@ -181,7 +182,7 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
     // if (_formKey.currentState!.validate()) {
       try {
         final success = await _hostProfileService.updateProfile(
-          clubName: _clubNameController.text,
+          clubName: _nameController.text,
           description: _descriptionController.text,
           phoneNumber: _phoneController.text,
           website: _websiteController.text,
@@ -247,8 +248,8 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
           }
 
           final profile = snapshot.data!;
-          _clubNameController.text = profile.clubName;
-          _descriptionController.text = profile.clubDescription;
+          _nameController.text = profile.name;
+          _descriptionController.text = profile.description;
           _phoneController.text = profile.phoneNumber;
           _websiteController.text = profile.website;
           _instagramController.text = profile.instagram;
@@ -261,16 +262,16 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
               child: Column(
                 children: [
                   GestureDetector(
-                    onTap: () => _showImageOptions(profile.clubLogo),
+                    onTap: () => _showImageOptions(profile.logoUrl),
                     child: CircleAvatar(
                       radius: 50,
                       backgroundColor: Colors.grey[300],
                       backgroundImage: _logoImage != null
                           ? FileImage(_logoImage!) as ImageProvider
-                          : (profile.clubLogo != null && profile.clubLogo!.isNotEmpty
-                          ? NetworkImage(profile.clubLogo)
+                          : (profile.logoUrl != null && profile.logoUrl!.isNotEmpty
+                          ? NetworkImage(profile.logoUrl)
                           : null),
-                      child: _logoImage == null && (profile.clubLogo.isEmpty)
+                      child: _logoImage == null && (profile.logoUrl.isEmpty)
                           ? const Icon(Icons.add_a_photo, size: 30, color: Colors.grey)
                           : null,
                     ),
@@ -286,13 +287,13 @@ class _HostProfileScreenState extends State<HostProfileScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     readOnly: true,
-                    initialValue: profile.role,
+                    initialValue: "HOST",
                     decoration: buildInputDecoration("Role", Icons.person),
                   ),
                   const SizedBox(height: 12),
 
                   TextFormField(
-                    controller: _clubNameController,
+                    controller: _nameController,
                     decoration: buildInputDecoration("Club Name", Icons.home),
                     validator: (value) => value == null || value.isEmpty ? "Enter club name" : null,
                   ),

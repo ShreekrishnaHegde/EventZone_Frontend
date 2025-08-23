@@ -2,6 +2,7 @@ import 'dart:convert';
 
 class Event {
   String? id;
+  final String? publicId;
   String title;
   String description;
   DateTime date;
@@ -17,6 +18,7 @@ class Event {
     this.location,
     this.time,
     this.imageUrl,
+    this.publicId
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
@@ -28,6 +30,7 @@ class Event {
       location: json['location'],
       time: json['time'],
       imageUrl: json['imageUrl'],
+      publicId: json['publicId'] ?? '',
     );
   }
 
@@ -38,7 +41,6 @@ class Event {
       "date": date.toIso8601String(),
       "location": location,
       "time": time,
-      "imageUrl": imageUrl,
     };
   }
 }

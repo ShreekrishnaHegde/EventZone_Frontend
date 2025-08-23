@@ -3,7 +3,7 @@ import '../../models/event_model.dart';
 import '../../service/auth_service/auth_gate.dart';
 import '../../service/auth_service/auth_service.dart';
 import '../../service/event_service/event_service.dart';
-import '../host/host_profile_screen.dart';
+import 'attendee_profile_screen.dart';
 
 class AttendeeHomeView extends StatefulWidget {
   const AttendeeHomeView({super.key});
@@ -93,7 +93,7 @@ class _AttendeeHomeViewState extends State<AttendeeHomeView> {
                 Navigator.pop(context); // Close drawer
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const HostProfileScreen()),
+                  MaterialPageRoute(builder: (context) => const AttendeeProfileScreen()),
                 );
               },
             ),
@@ -145,7 +145,7 @@ class AllEventsScreen extends StatelessWidget {
                 trailing: ElevatedButton(
                   onPressed: () async {
                     try {
-                      // await eventService.registerForEvent(event.id);
+                      await eventService.registerForEvent(event.publicId!);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Registered successfully")),
                       );
