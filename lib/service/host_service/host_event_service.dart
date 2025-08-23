@@ -13,7 +13,15 @@ class HostEventService {
   final storage=Storage();
 
   Future<List<Event>> getAllEvents() async {
-    final res = await http.get(Uri.parse(_baseUrl));
+    final token=await storage.getToken();
+    final res = await http.get(
+        Uri.parse('$_baseUrl/api/events/hostEvents'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+
+    );
     if (res.statusCode == 200) {
       final List<dynamic> data = jsonDecode(res.body);
       return data.map((e) => Event.fromJson(e)).toList();

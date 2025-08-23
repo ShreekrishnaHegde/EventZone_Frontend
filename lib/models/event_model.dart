@@ -8,7 +8,7 @@ class Event {
   DateTime date;
   String? location;
   String? time;
-  String? imageUrl;
+  String? eventImageUrl;
 
   Event({
     this.id,
@@ -17,7 +17,7 @@ class Event {
     required this.date,
     this.location,
     this.time,
-    this.imageUrl,
+    this.eventImageUrl,
     this.publicId
   });
 
@@ -29,7 +29,7 @@ class Event {
       date: DateTime.parse(json['date']),
       location: json['location'],
       time: json['time'],
-      imageUrl: json['imageUrl'],
+      eventImageUrl: json['eventImageUrl'],
       publicId: json['publicId'] ?? '',
     );
   }
