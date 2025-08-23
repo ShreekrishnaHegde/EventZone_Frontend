@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/event_model.dart';
-import '../../service/auth_service/auth_gate.dart';
 import '../../service/auth_service/auth_service.dart';
 import '../../service/event_service/event_service.dart';
-import 'attendee_profile_screen.dart';
 
 class AttendeeHomeView extends StatefulWidget {
   const AttendeeHomeView({super.key});
@@ -16,19 +14,14 @@ class _AttendeeHomeViewState extends State<AttendeeHomeView> {
   final _authService = AuthService();
   final EventService _eventService = EventService();
   int _selectedIndex = 0;
-
-  final List<Widget> _pages = [];
+  late Future<List<Event>> _eventsFuture;
   void _logout(BuildContext context) async {
     _authService.logout();
   }
   @override
   void initState() {
     super.initState();
-    // Pages for nav bar
-    _pages.addAll([
-      AllEventsScreen(eventService: _eventService),
-      RegisteredEventsScreen(eventService: _eventService),
-    ]);
+    _loadEvents();
   }
 
   void _onItemTapped(int index) {
@@ -36,171 +29,148 @@ class _AttendeeHomeViewState extends State<AttendeeHomeView> {
       _selectedIndex = index;
     });
   }
+  void _loadEvents() {
+    setState(() {
+      _eventsFuture = _eventService.fetchAllEvents();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selectedIndex == 0 ? "All Events" : "My Registered Events"),
-        backgroundColor: Colors.deepPurple,
+        title: const Text("EventZone Participant"),
+        backgroundColor: Colors.indigo.shade700,
+        centerTitle: true,
+        elevation: 2,
       ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event),
-            label: 'All Events',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle),
-            label: 'Registered',
-          ),
-        ],
-      ),
-      drawer: Drawer(
-        child: Column(
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.deepPurple,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      'H',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 28,
-                        color: Colors.lightBlue,
-                      ),
-                    ),
+      body: FutureBuilder<List<Event>>(
+        future: _eventsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return _buildError(snapshot.error.toString());
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return _buildEmpty();
+          }
+          final events = snapshot.data!;
+          return RefreshIndicator(
+            onRefresh: () async => _loadEvents(),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                final event = events[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade300),
                   ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text("Profile"),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AttendeeProfileScreen()),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Event Image
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                        child: event.eventImageUrl != null
+                            ? Image.network(
+                          event.eventImageUrl!,
+                          width: double.infinity,
+                          height: 180,
+                          fit: BoxFit.cover,
+                        )
+                            : Container(
+                          height: 180,
+                          color: Colors.grey.shade300,
+                          child: const Icon(Icons.event, size: 60, color: Colors.grey),
+                        ),
+                      ),
+                      // Event Details
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              event.title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              event.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: Colors.grey.shade700),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(event.date.toString().split(" ").first),
+                                const SizedBox(width: 16),
+                                if (event.location != null) ...[
+                                  const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      event.location!,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ]
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text("Logout"),
-              onTap: (){
-                _logout(context);
-                Navigator.push(context, MaterialPageRoute(builder: (context) => AuthGate()));
-              },
+          );
+        },
+      ),
+    );
+  }
+  Widget _buildError(String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 12),
+            Text("Something went wrong", style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 6),
+            Text(error, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _loadEvents,
+              icon: const Icon(Icons.refresh),
+              label: const Text("Retry"),
             ),
           ],
         ),
       ),
     );
   }
-}
-
-class AllEventsScreen extends StatelessWidget {
-  final EventService eventService;
-  const AllEventsScreen({super.key, required this.eventService});
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<Event>>(
-      future: eventService.fetchAllEvents(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error}"));
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text("No events found"));
-        }
-
-        final events = snapshot.data!;
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: events.length,
-          itemBuilder: (context, index) {
-            final event = events[index];
-            return Card(
-              child: ListTile(
-                leading: const Icon(Icons.event),
-                title: Text(event.title),
-                // subtitle: Text(event.clubName),
-                trailing: ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      await eventService.registerForEvent(event.publicId!);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Registered successfully")),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Error: $e")),
-                      );
-                    }
-                  },
-                  child: const Text("Register"),
-                ),
-              ),
-            );
-          },
-        );
-      },
+  Widget _buildEmpty() {
+    return const Center(
+      child: Text(
+        "No Events Found",
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      ),
     );
   }
 }
 
-class RegisteredEventsScreen extends StatelessWidget {
-  final EventService eventService;
-  const RegisteredEventsScreen({super.key, required this.eventService});
 
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<Event>>(
-      future: eventService.fetchRegisteredEvents(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error}"));
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text("No registered events"));
-        }
-
-        final events = snapshot.data!;
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: events.length,
-          itemBuilder: (context, index) {
-            final event = events[index];
-            return Card(
-              child: ListTile(
-                leading: const Icon(Icons.check_circle, color: Colors.green),
-                title: Text(event.title),
-                // subtitle: Text(event.clubName),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-}
